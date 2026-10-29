@@ -1,0 +1,81 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Backend.Dockerfile
+    environment:
+      CONVEX_CLOUD_ORIGIN: ${ANKAN_CONVEX_ORIGIN:-http://localhost:3210}
+      CONVEX_SITE_ORIGIN: ${ANKAN_CONVEX_SITE_ORIGIN:-http://localhost:3211}
+      DO_NOT_REQUIRE_SSL: "true"
+      DISABLE_BEACON: "true"
+    ports:
+      - "127.0.0.1:3210:3210"
+      - "127.0.0.1:3211:3211"
+    volumes:
+      - convex-data:/convex/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:3210/version"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    stop_signal: SIGINT
+
+  deploy:
+    build:
+      context: .
+      dockerfile: docker/App.Dockerfile
+      target: deploy
+    environment:
+      CONVEX_SELF_HOSTED_URL: http://backend:3210
+      APP_PUBLIC_URL: ${ANKAN_WEB_ORIGIN:-http://localhost:3000}
+      MCP_PUBLIC_ORIGIN: ${ANKAN_MCP_ORIGIN:-http://localhost:3002}
+      ZEPTOMAIL_SEND_API_KEY: ${ZEPTOMAIL_SEND_API_KEY:?Set ZEPTOMAIL_SEND_API_KEY in .env}
+      ZEPTOMAIL_FROM_ADDRESS: ${ZEPTOMAIL_FROM_ADDRESS:?Set ZEPTOMAIL_FROM_ADDRESS in .env}
+      ZEPTOMAIL_API_URL: ${ZEPTOMAIL_API_URL:-https://api.zeptomail.com/v1.1/email}
+      CLOUDFLARE_TURNSTILE_SECRET_KEY: ${CLOUDFLARE_TURNSTILE_SECRET_KEY:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:-}
+      GOOGLE_AI_API_KEY: ${GOOGLE_AI_API_KEY:-}
+    volumes:
+      - convex-data:/convex/data
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: "no"
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/App.Dockerfile
+      target: web
+      args:
+        VITE_CONVEX_URL: ${ANKAN_CONVEX_ORIGIN:-http://localhost:3210}
+        VITE_TURNSTILE_SITE_KEY: ${VITE_TURNSTILE_SITE_KEY:-}
+        VITE_MCP_ORIGIN: ${ANKAN_MCP_ORIGIN:-http://localhost:3002}
+        VITE_TELEGRAM_BOT_USERNAME: ${VITE_TELEGRAM_BOT_USERNAME:-}
+    ports:
+      - "127.0.0.1:3000:80"
+    depends_on:
+      deploy:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  mcp:
+    build:
+      context: .
+      dockerfile: mcp/Dockerfile
+    environment:
+      MCP_PUBLIC_ORIGIN: ${ANKAN_MCP_ORIGIN:-http://localhost:3002}
+      ANKAN_APP_ORIGIN: ${ANKAN_WEB_ORIGIN:-http://localhost:3000}
+      CONVEX_MCP_ORIGIN: http://backend:3211
+    ports:
+      - "127.0.0.1:3002:3002"
+    volumes:
+      - convex-data:/convex/data:ro
+    depends_on:
+      deploy:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+volumes:
+  convex-data:
