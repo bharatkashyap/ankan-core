@@ -1,52 +1,75 @@
 # Ankan Core
 
-Self-host Ankan with a Vue web app, a Convex backend, and an MCP proxy. Docker Compose builds the images, starts Convex, deploys the functions, and serves the app.
+Self-hosted Ankan: Vue frontend, Convex backend, and MCP proxy. MIT licensed.
 
-## Quick start
+## Requirements
 
-1. Install and start Docker Engine or Docker Desktop with Docker Compose v2.
-2. In [ZeptoMail](https://www.zoho.com/zeptomail/), verify a sender address and create a Send Mail API key. Email codes are required for account creation and sign-in.
-3. Clone this repository, then copy `.env.example` to `.env`.
-4. Set `ZEPTOMAIL_SEND_API_KEY` and `ZEPTOMAIL_FROM_ADDRESS` in `.env`. Set `ZEPTOMAIL_API_URL` if your ZeptoMail region uses a different Send Mail endpoint.
-5. Run `docker compose up` in the repository directory. Wait for the deploy service to finish, then open <http://localhost:3000> and sign in with your email code.
+- Docker Engine or Docker Desktop with Docker Compose v2.
+- ZeptoMail Send Mail API key and a verified sender address. Email OTP is the authentication method.
+- Available host ports: `3000`, `3002`, `3210`, `3211`.
 
-Ports 3000 (web), 3002 (MCP), 3210 (Convex API), and 3211 (Convex HTTP actions) bind to `127.0.0.1` by default. The `convex-data` volume stores the database and generated keys across restarts. Run `docker compose up --build` after changing the source or public URLs.
-
-## Environment variables
-
-| Variable | Purpose |
-| --- | --- |
-| `ZEPTOMAIL_SEND_API_KEY` | **Required.** ZeptoMail Send Mail API key. |
-| `ZEPTOMAIL_FROM_ADDRESS` | **Required.** Verified sender address. |
-| `ZEPTOMAIL_API_URL` | ZeptoMail Send Mail endpoint for your region; defaults to `https://api.zeptomail.com/v1.1/email`. |
-| `ANKAN_WEB_ORIGIN` | Public web app URL; defaults to `http://localhost:3000`. |
-| `ANKAN_CONVEX_ORIGIN` | Public Convex API URL; defaults to `http://localhost:3210`. |
-| `ANKAN_CONVEX_SITE_ORIGIN` | Public Convex HTTP actions URL; defaults to `http://localhost:3211`. |
-| `ANKAN_MCP_ORIGIN` | Public MCP URL; defaults to `http://localhost:3002`. |
-| `ANKAN_BIND_ADDRESS` | Host interface for all four ports; defaults to `127.0.0.1`. |
-| `VITE_TURNSTILE_SITE_KEY`, `CLOUDFLARE_TURNSTILE_SECRET_KEY` | Optional Cloudflare Turnstile keys; set both together. |
-| `GOOGLE_AI_API_KEY` | Optional server-managed Google AI key. Users can also supply their own key in the app. |
-| `TELEGRAM_BOT_TOKEN`, `VITE_TELEGRAM_BOT_USERNAME`, `TELEGRAM_WEBHOOK_SECRET` | Optional Telegram bot settings; see below. |
-
-## Access from other devices
-
-Set up DNS and HTTPS reverse proxies for the web app, Convex API, Convex HTTP actions, and MCP endpoint. Route those origins to host ports 3000, 3210, 3211, and 3002 respectively. Preserve headers and WebSocket upgrades for the Convex API. Set all four `ANKAN_*_ORIGIN` values in `.env` to the matching external `https://` URLs, then run `docker compose up --build`.
-
-A reverse proxy on the host can use the default loopback bindings. If it needs to reach the host ports from another network namespace, set `ANKAN_BIND_ADDRESS` to a reachable interface and restrict direct access with your firewall. The browser needs the web and Convex API origins; Telegram needs the Convex HTTP actions origin; external MCP clients need the MCP origin.
-
-## Optional integrations
-
-- **Turnstile:** Create a widget for your web hostname, set both Turnstile keys in `.env`, and rebuild.
-- **Google AI:** Set `GOOGLE_AI_API_KEY` in `.env`, or add a personal key in Ankan after signing in.
-- **Telegram:** Create a bot with BotFather. Set its token, username, and a long random webhook secret in `.env`; configure public HTTPS for `ANKAN_CONVEX_SITE_ORIGIN`; start Compose; then register `https://<actions-host>/telegram/webhook` with Telegram using the same secret as `secret_token`. Message the bot and connect it from Ankan's Telegram page.
-- **MCP:** Open **Connected apps** after signing in and use the personal MCP URL shown there. External clients need an HTTPS `ANKAN_MCP_ORIGIN` and OAuth approval. See [MCP setup](docs/mcp.md).
-
-Register a Telegram webhook with:
+## Start
 
 ```sh
-curl --request POST "https://api.telegram.org/bot<BOT_TOKEN>/setWebhook" \
-  --data-urlencode "url=https://<actions-host>/telegram/webhook" \
-  --data-urlencode "secret_token=<WEBHOOK_SECRET>"
+git clone https://github.com/bharatkashyap/ankan-core.git
+cd ankan-core
+cp .env.example .env
 ```
 
-The source is MIT licensed. Ankan Core stores records without application-level field encryption; protect the Docker host and `convex-data` volume accordingly.
+Set `ZEPTOMAIL_SEND_API_KEY` and `ZEPTOMAIL_FROM_ADDRESS` in `.env`, then run:
+
+```sh
+docker compose up
+```
+
+Open <http://localhost:3000>. The first start builds the images, starts the local Convex backend, generates credentials in the `convex-data` volume, and deploys the Convex functions. No Convex Cloud setup is required. Subsequent starts reuse the volume. Rebuild after source or public URL changes with `docker compose up --build`.
+
+## Configuration
+
+| Variable | Required | Default | Description |
+| --- | --- | --- | --- |
+| `ZEPTOMAIL_SEND_API_KEY` | Yes | — | ZeptoMail Send Mail API key. |
+| `ZEPTOMAIL_FROM_ADDRESS` | Yes | — | Verified sender address. |
+| `ZEPTOMAIL_API_URL` | No | `https://api.zeptomail.com/v1.1/email` | Send Mail endpoint for the account's region. |
+| `ANKAN_WEB_ORIGIN` | No | `http://localhost:3000` | Browser-facing frontend origin. |
+| `ANKAN_CONVEX_ORIGIN` | No | `http://localhost:3210` | Browser-facing Convex API origin. |
+| `ANKAN_CONVEX_SITE_ORIGIN` | No | `http://localhost:3211` | Convex HTTP actions origin. |
+| `ANKAN_MCP_ORIGIN` | No | `http://localhost:3002` | MCP and OAuth origin. |
+| `ANKAN_BIND_ADDRESS` | No | `127.0.0.1` | Host address for all published ports. |
+| `VITE_TURNSTILE_SITE_KEY` | No | empty | Turnstile site key; set with the secret key. |
+| `CLOUDFLARE_TURNSTILE_SECRET_KEY` | No | empty | Turnstile secret key; set with the site key. |
+| `GOOGLE_AI_API_KEY` | No | empty | Server-managed Google AI API key. |
+| `TELEGRAM_BOT_TOKEN` | No | empty | Telegram bot token. |
+| `VITE_TELEGRAM_BOT_USERNAME` | No | empty | Telegram bot username, without `@`. |
+| `TELEGRAM_WEBHOOK_SECRET` | No | empty | Telegram webhook secret token. |
+
+## Remote access
+
+For non-local access, configure four HTTPS reverse-proxy routes and set the corresponding origins in `.env`:
+
+| Origin variable | Upstream |
+| --- | --- |
+| `ANKAN_WEB_ORIGIN` | `127.0.0.1:3000` |
+| `ANKAN_CONVEX_ORIGIN` | `127.0.0.1:3210` |
+| `ANKAN_CONVEX_SITE_ORIGIN` | `127.0.0.1:3211` |
+| `ANKAN_MCP_ORIGIN` | `127.0.0.1:3002` |
+
+The Convex API proxy must support WebSocket upgrades. Use `ANKAN_BIND_ADDRESS` only if the reverse proxy cannot reach host loopback; restrict direct access to the published ports. Rebuild with `docker compose up --build` after changing origins.
+
+## Optional services
+
+- **Turnstile:** Create a widget for the web origin's hostname; set both Turnstile variables and rebuild.
+- **Google AI:** Set `GOOGLE_AI_API_KEY`, or configure a user key in the app.
+- **Telegram:** Create a bot with BotFather. Set `TELEGRAM_BOT_TOKEN`, `VITE_TELEGRAM_BOT_USERNAME`, and `TELEGRAM_WEBHOOK_SECRET`; configure `ANKAN_CONVEX_SITE_ORIGIN` over public HTTPS; start Compose; register the webhook:
+
+  ```sh
+  curl --request POST "https://api.telegram.org/bot<BOT_TOKEN>/setWebhook" \
+    --data-urlencode "url=https://<actions-host>/telegram/webhook" \
+    --data-urlencode "secret_token=<TELEGRAM_WEBHOOK_SECRET>"
+  ```
+
+- **MCP:** Set an HTTPS `ANKAN_MCP_ORIGIN` for remote clients. The account-specific URL and OAuth authorization are available on the app's **Connected apps** page. See [MCP configuration](docs/mcp.md).
+
+## Data
+
+`convex-data` contains SQLite data, Convex credentials, auth signing keys, and the MCP proxy secret. Back up the entire volume with the stack stopped. `docker compose down` retains the volume; `docker compose down -v` deletes it. Application-level field encryption is disabled in Ankan Core.
