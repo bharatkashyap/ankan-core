@@ -290,7 +290,7 @@ watch(email, (value) => {
       <p class="text-sm text-muted-foreground mb-8">
         {{
           isSignupMode
-            ? "No card required. Start your 15-day trial (20/day)."
+            ? "Enter your email to create an account on this server."
             : "Don't have an account? You can sign up instantly."
         }}
       </p>

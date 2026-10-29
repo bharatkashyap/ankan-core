@@ -18,6 +18,14 @@ function convex(...args) {
   if (result.status !== 0) throw new Error(`convex ${args[0]} failed (${result.status ?? "signal"})`);
 }
 
+function setEnv(name, value) {
+  const result = spawnSync("pnpm", ["exec", "convex", "env", "set", name], {
+    cwd: process.env.ANKAN_APP_DIR || "/app", env, input: value,
+    stdio: ["pipe", "inherit", "inherit"],
+  });
+  if (result.status !== 0) throw new Error(`convex env set ${name} failed (${result.status ?? "signal"})`);
+}
+
 const keysPath = `${shared}/auth-keys.json`;
 let keys;
 if (existsSync(keysPath)) {
@@ -31,20 +39,20 @@ if (existsSync(keysPath)) {
   writeFileSync(keysPath, JSON.stringify(keys), { mode: 0o600 });
 }
 
-convex("env", "set", "JWT_PRIVATE_KEY", keys.JWT_PRIVATE_KEY);
-convex("env", "set", "JWKS", keys.JWKS);
-convex("env", "set", "SITE_URL", process.env.APP_PUBLIC_URL || "http://localhost:3000");
-convex("env", "set", "APP_PUBLIC_URL", process.env.APP_PUBLIC_URL || "http://localhost:3000");
-convex("env", "set", "ANKAN_APP_URL", process.env.APP_PUBLIC_URL || "http://localhost:3000");
-convex("env", "set", "MCP_PUBLIC_ORIGIN", process.env.MCP_PUBLIC_ORIGIN || "http://localhost:3002");
-convex("env", "set", "MCP_PROXY_SECRET", readFileSync(`${shared}/mcp-secret`, "utf8").trim());
-convex("env", "set", "SELF_HOSTED_MODE", "1");
+setEnv("JWT_PRIVATE_KEY", keys.JWT_PRIVATE_KEY);
+setEnv("JWKS", keys.JWKS);
+setEnv("SITE_URL", process.env.APP_PUBLIC_URL || "http://localhost:3000");
+setEnv("APP_PUBLIC_URL", process.env.APP_PUBLIC_URL || "http://localhost:3000");
+setEnv("ANKAN_APP_URL", process.env.APP_PUBLIC_URL || "http://localhost:3000");
+setEnv("MCP_PUBLIC_ORIGIN", process.env.MCP_PUBLIC_ORIGIN || "http://localhost:3002");
+setEnv("MCP_PROXY_SECRET", readFileSync(`${shared}/mcp-secret`, "utf8").trim());
+setEnv("SELF_HOSTED_MODE", "1");
 for (const name of [
   "ZEPTOMAIL_SEND_API_KEY", "ZEPTOMAIL_FROM_ADDRESS", "ZEPTOMAIL_API_URL",
   "CLOUDFLARE_TURNSTILE_SECRET_KEY", "TELEGRAM_BOT_TOKEN",
   "TELEGRAM_WEBHOOK_SECRET", "GOOGLE_AI_API_KEY",
 ]) {
-  if (process.env[name]) convex("env", "set", name, process.env[name]);
+  if (process.env[name]) setEnv(name, process.env[name]);
 }
 convex("deploy", "--yes", "--typecheck", "disable");
 console.log("Ankan Core is ready at http://localhost:3000");

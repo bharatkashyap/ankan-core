@@ -9,8 +9,8 @@ services:
       DO_NOT_REQUIRE_SSL: "true"
       DISABLE_BEACON: "true"
     ports:
-      - "127.0.0.1:3210:3210"
-      - "127.0.0.1:3211:3211"
+      - "${ANKAN_BIND_ADDRESS:-127.0.0.1}:3210:3210"
+      - "${ANKAN_BIND_ADDRESS:-127.0.0.1}:3211:3211"
     volumes:
       - convex-data:/convex/data
     healthcheck:
@@ -54,7 +54,7 @@ services:
         VITE_MCP_ORIGIN: ${ANKAN_MCP_ORIGIN:-http://localhost:3002}
         VITE_TELEGRAM_BOT_USERNAME: ${VITE_TELEGRAM_BOT_USERNAME:-}
     ports:
-      - "127.0.0.1:3000:80"
+      - "${ANKAN_BIND_ADDRESS:-127.0.0.1}:3000:80"
     depends_on:
       deploy:
         condition: service_completed_successfully
@@ -69,7 +69,7 @@ services:
       ANKAN_APP_ORIGIN: ${ANKAN_WEB_ORIGIN:-http://localhost:3000}
       CONVEX_MCP_ORIGIN: http://backend:3211
     ports:
-      - "127.0.0.1:3002:3002"
+      - "${ANKAN_BIND_ADDRESS:-127.0.0.1}:3002:3002"
     volumes:
       - convex-data:/convex/data:ro
     depends_on:
