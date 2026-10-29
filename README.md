@@ -1,6 +1,6 @@
 # Ankan Core
 
-Self-hosted Ankan: Vue frontend, Convex backend, and MCP proxy. MIT licensed.
+Self-hosted anything tracker: Vue frontend, Convex backend, and MCP proxy. MIT licensed.
 
 ## Requirements
 
@@ -39,6 +39,7 @@ Open <http://localhost:3000>. The first start builds the images, starts the loca
 | `VITE_TURNSTILE_SITE_KEY` | No | empty | Turnstile site key; set with the secret key. |
 | `CLOUDFLARE_TURNSTILE_SECRET_KEY` | No | empty | Turnstile secret key; set with the site key. |
 | `GOOGLE_AI_API_KEY` | No | empty | Server-managed Google AI API key. |
+| `JEV_API_KEY` | No | empty | JEV router key for Telegram text classification; falls back to Google AI when unset. |
 | `TELEGRAM_BOT_TOKEN` | No | empty | Telegram bot token. |
 | `VITE_TELEGRAM_BOT_USERNAME` | No | empty | Telegram bot username, without `@`. |
 | `TELEGRAM_WEBHOOK_SECRET` | No | empty | Telegram webhook secret token. |
@@ -49,6 +50,7 @@ For access from another device, set `ANKAN_BIND_ADDRESS` and the `ANKAN_*_ORIGIN
 
 - **Turnstile:** Create a widget for the web origin's hostname; set both Turnstile variables and rebuild.
 - **Google AI:** Set `GOOGLE_AI_API_KEY`, or configure a user key in the app.
+- **JEV router:** Set `JEV_API_KEY` to route Telegram text through JEV before the Google AI fallback.
 - **Telegram:** Create a bot with BotFather. Set `TELEGRAM_BOT_TOKEN`, `VITE_TELEGRAM_BOT_USERNAME`, and `TELEGRAM_WEBHOOK_SECRET`; configure `ANKAN_CONVEX_SITE_ORIGIN` over public HTTPS; start Compose; register the webhook:
 
   ```sh
