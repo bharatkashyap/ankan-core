@@ -35,7 +35,7 @@ Open <http://localhost:3000>. The first start builds the images, starts the loca
 | `ANKAN_CONVEX_ORIGIN` | No | `http://localhost:3210` | Browser-facing Convex API origin. |
 | `ANKAN_CONVEX_SITE_ORIGIN` | No | `http://localhost:3211` | Convex HTTP actions origin. |
 | `ANKAN_MCP_ORIGIN` | No | `http://localhost:3002` | MCP and OAuth origin. |
-| `ANKAN_BIND_ADDRESS` | No | `127.0.0.1` | Host address for all published ports. |
+| `ANKAN_BIND_ADDRESS` | No | `127.0.0.1` | Host address for published ports; use `0.0.0.0` to accept connections from other devices. |
 | `VITE_TURNSTILE_SITE_KEY` | No | empty | Turnstile site key; set with the secret key. |
 | `CLOUDFLARE_TURNSTILE_SECRET_KEY` | No | empty | Turnstile secret key; set with the site key. |
 | `GOOGLE_AI_API_KEY` | No | empty | Server-managed Google AI API key. |
@@ -43,18 +43,7 @@ Open <http://localhost:3000>. The first start builds the images, starts the loca
 | `VITE_TELEGRAM_BOT_USERNAME` | No | empty | Telegram bot username, without `@`. |
 | `TELEGRAM_WEBHOOK_SECRET` | No | empty | Telegram webhook secret token. |
 
-## Remote access
-
-For non-local access, configure four HTTPS reverse-proxy routes and set the corresponding origins in `.env`:
-
-| Origin variable | Upstream |
-| --- | --- |
-| `ANKAN_WEB_ORIGIN` | `127.0.0.1:3000` |
-| `ANKAN_CONVEX_ORIGIN` | `127.0.0.1:3210` |
-| `ANKAN_CONVEX_SITE_ORIGIN` | `127.0.0.1:3211` |
-| `ANKAN_MCP_ORIGIN` | `127.0.0.1:3002` |
-
-The Convex API proxy must support WebSocket upgrades. Use `ANKAN_BIND_ADDRESS` only if the reverse proxy cannot reach host loopback; restrict direct access to the published ports. Rebuild with `docker compose up --build` after changing origins.
+For access from another device, set `ANKAN_BIND_ADDRESS` and the `ANKAN_*_ORIGIN` values to addresses that device can reach. Rebuild after changing origins.
 
 ## Optional services
 
