@@ -2,6 +2,8 @@
 
 Self-hosted anything tracker: Vue frontend, Convex backend, and MCP proxy. MIT licensed.
 
+![Ankan Core health tracking](docs/images/ankan-health.jpg)
+
 ## Requirements
 
 - Docker Engine or Docker Desktop with Docker Compose v2.
